@@ -36,6 +36,7 @@
       <p><output id="recomendacion-salida" for="hora-clase duracion"></output></p>
       <p><output id="llegada-estimada" for="hora-clase duracion hora-disponible"></output></p>
       <p><output id="margen-llegada" for="hora-clase duracion hora-disponible"></output></p>
+      <p id="estado-guardado" role="status"></p>
     </form>
   </main>
 
@@ -52,6 +53,8 @@
     const recomendacionSalida = document.querySelector("#recomendacion-salida");
     const llegadaEstimada = document.querySelector("#llegada-estimada");
     const avisoMargen = document.querySelector("#margen-llegada");
+    const estadoGuardado = document.querySelector("#estado-guardado");
+    const clavePlan = "ecoruta:ultimo-plan";
     const margenSalida = 10;
     const minutosPorDia = 24 * 60;
 
@@ -92,15 +95,17 @@
         : "";
     });
 
-    horaDisponible.addEventListener("input", () => {
+    function mostrarDisponibilidad() {
       resumenDisponibilidad.textContent = horaDisponible.value
         ? `Hora más temprana de salida: ${horaDisponible.value}`
         : "";
-    });
+    }
+    horaDisponible.addEventListener("input", mostrarDisponibilidad);
 
     plan.addEventListener("input", () => {
       llegadaEstimada.textContent = "";
       avisoMargen.textContent = "";
+      estadoGuardado.textContent = "";
     });
 
     plan.addEventListener("submit", (event) => {
@@ -120,6 +125,22 @@
         return;
       }
 
+      mostrarPlan();
+
+      try {
+        localStorage.setItem(clavePlan, JSON.stringify({
+          horaClase: horaClase.value,
+          duracion: duracion.value,
+          horaDisponible: horaDisponible.value,
+        }));
+        estadoGuardado.textContent = "Plan guardado en este navegador.";
+      } catch {
+        estadoGuardado.textContent = "El navegador no pudo guardar el plan.";
+      }
+    });
+
+    function mostrarPlan() {
+      mostrarDisponibilidad();
       resumenHora.textContent = `Hora de inicio de clase confirmada: ${horaClase.value}`;
       resumenDuracion.textContent = `Duración habitual: ${duracion.value} minutos`;
 
@@ -152,7 +173,32 @@
         avisoMargen.textContent =
           `Llegarías ${-margenLlegada} ${unidad} después del inicio de clase.`;
       }
-    });
+    }
+
+    function recuperarPlan() {
+      let guardado;
+      try {
+        guardado = JSON.parse(localStorage.getItem(clavePlan));
+      } catch {
+        return;
+      }
+
+      if (!guardado) return;
+
+      horaClase.value = guardado.horaClase ?? "";
+      duracion.value = guardado.duracion ?? "";
+      horaDisponible.value = guardado.horaDisponible ?? "";
+
+      if (!horaClase.value || !duracion.validity.valid) {
+        plan.reset();
+        return;
+      }
+
+      mostrarPlan();
+      estadoGuardado.textContent = "Último plan recuperado.";
+    }
+
+    recuperarPlan();
   </script>
 </body>
 </html>

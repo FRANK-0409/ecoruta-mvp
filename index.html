@@ -11,38 +11,69 @@
     <p>Planificador de salida al campus</p>
 
     <form id="plan" novalidate>
-      <label for="hora-clase">Hora de inicio de mi primera clase</label>
-      <input id="hora-clase" type="time" required aria-describedby="error">
+      <p>
+        <label for="hora-clase">Hora de inicio de mi primera clase</label>
+        <input id="hora-clase" type="time" required aria-describedby="error-hora">
+      </p>
+      <p id="error-hora" role="alert"></p>
+      <p><output id="resumen-hora" for="hora-clase"></output></p>
+
+      <p>
+        <label for="duracion">Duración habitual del viaje (minutos)</label>
+        <input id="duracion" type="number" min="1" step="1" required
+               aria-describedby="error-duracion">
+      </p>
+      <p id="error-duracion" role="alert"></p>
+      <p><output id="resumen-duracion" for="duracion"></output></p>
+
       <button type="submit">Continuar al cálculo</button>
-      <p id="error" role="alert"></p>
-      <output id="resumen" for="hora-clase"></output>
     </form>
   </main>
 
   <script>
     const plan = document.querySelector("#plan");
     const horaClase = document.querySelector("#hora-clase");
-    const error = document.querySelector("#error");
-    const resumen = document.querySelector("#resumen");
+    const duracion = document.querySelector("#duracion");
+    const errorHora = document.querySelector("#error-hora");
+    const errorDuracion = document.querySelector("#error-duracion");
+    const resumenHora = document.querySelector("#resumen-hora");
+    const resumenDuracion = document.querySelector("#resumen-duracion");
 
     horaClase.addEventListener("input", () => {
-      error.textContent = "";
+      errorHora.textContent = "";
       horaClase.removeAttribute("aria-invalid");
-      const hora = horaClase.value;
-      resumen.textContent = hora ? "Hora de inicio de clase: " + hora : "";
+      resumenHora.textContent = horaClase.value
+        ? `Hora de inicio de clase: ${horaClase.value}`
+        : "";
+    });
+
+    duracion.addEventListener("input", () => {
+      errorDuracion.textContent = "";
+      duracion.removeAttribute("aria-invalid");
+      resumenDuracion.textContent = duracion.validity.valid
+        ? `Duración habitual: ${duracion.value} minutos`
+        : "";
     });
 
     plan.addEventListener("submit", (event) => {
       event.preventDefault();
 
       if (!horaClase.value) {
-        error.textContent = "Ingresa la hora de inicio de tu primera clase.";
+        errorHora.textContent = "Ingresa la hora de inicio de tu primera clase.";
         horaClase.setAttribute("aria-invalid", "true");
         horaClase.focus();
         return;
       }
 
-      resumen.textContent = "Hora de inicio de clase confirmada: " + horaClase.value;
+      if (!duracion.validity.valid) {
+        errorDuracion.textContent = "Ingresa una duración mayor que cero en minutos enteros.";
+        duracion.setAttribute("aria-invalid", "true");
+        duracion.focus();
+        return;
+      }
+
+      resumenHora.textContent = `Hora de inicio de clase confirmada: ${horaClase.value}`;
+      resumenDuracion.textContent = `Duración habitual: ${duracion.value} minutos`;
     });
   </script>
 </body>

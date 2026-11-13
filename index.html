@@ -33,6 +33,7 @@
       <p><output id="resumen-disponibilidad" for="hora-disponible"></output></p>
 
       <button type="submit">Continuar al cálculo</button>
+      <p><output id="recomendacion-salida" for="hora-clase duracion"></output></p>
     </form>
   </main>
 
@@ -46,9 +47,25 @@
     const resumenHora = document.querySelector("#resumen-hora");
     const resumenDuracion = document.querySelector("#resumen-duracion");
     const resumenDisponibilidad = document.querySelector("#resumen-disponibilidad");
+    const recomendacionSalida = document.querySelector("#recomendacion-salida");
+    const margenSalida = 10;
+    const minutosPorDia = 24 * 60;
+
+    function horaEnMinutos(hora) {
+      const [horas, minutos] = hora.split(":").map(Number);
+      return horas * 60 + minutos;
+    }
+
+    function formatearHora(minutosTotales) {
+      const minutosDelDia = ((minutosTotales % minutosPorDia) + minutosPorDia) % minutosPorDia;
+      const horas = Math.floor(minutosDelDia / 60);
+      const minutos = minutosDelDia % 60;
+      return [horas, minutos].map(parte => String(parte).padStart(2, "0")).join(":");
+    }
 
     horaClase.addEventListener("input", () => {
       errorHora.textContent = "";
+      recomendacionSalida.textContent = "";
       horaClase.removeAttribute("aria-invalid");
       resumenHora.textContent = horaClase.value
         ? `Hora de inicio de clase: ${horaClase.value}`
@@ -57,6 +74,7 @@
 
     duracion.addEventListener("input", () => {
       errorDuracion.textContent = "";
+      recomendacionSalida.textContent = "";
       duracion.removeAttribute("aria-invalid");
       resumenDuracion.textContent = duracion.validity.valid
         ? `Duración habitual: ${duracion.value} minutos`
@@ -88,6 +106,19 @@
 
       resumenHora.textContent = `Hora de inicio de clase confirmada: ${horaClase.value}`;
       resumenDuracion.textContent = `Duración habitual: ${duracion.value} minutos`;
+
+      const minutosSalida = horaEnMinutos(horaClase.value) - (duracion.valueAsNumber + margenSalida);
+      const diasAntes = -Math.floor(minutosSalida / minutosPorDia);
+      let diaDeSalida = "";
+      if (diasAntes === 1) {
+        diaDeSalida = " (día anterior)";
+      } else if (diasAntes > 1) {
+        diaDeSalida = ` (${diasAntes} días antes)`;
+      }
+
+      recomendacionSalida.textContent =
+        `Hora recomendada de salida: ${formatearHora(minutosSalida)}${diaDeSalida}` +
+        ` con ${margenSalida} minutos de margen.`;
     });
   </script>
 </body>

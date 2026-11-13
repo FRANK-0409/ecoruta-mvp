@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EcoRuta · Planificador de salida</title>
+</head>
+<body>
+  <main>
+    <h1>EcoRuta</h1>
+    <p>Planificador de salida al campus</p>
+
+    <form id="plan" novalidate>
+      <label for="hora-clase">Hora de inicio de mi primera clase</label>
+      <input id="hora-clase" type="time" required aria-describedby="error">
+      <button type="submit">Continuar al cálculo</button>
+      <p id="error" role="alert"></p>
+      <output id="resumen" for="hora-clase"></output>
+    </form>
+  </main>
+
+  <script>
+    const plan = document.querySelector("#plan");
+    const horaClase = document.querySelector("#hora-clase");
+    const error = document.querySelector("#error");
+    const resumen = document.querySelector("#resumen");
+
+    horaClase.addEventListener("input", () => {
+      error.textContent = "";
+      horaClase.removeAttribute("aria-invalid");
+      const hora = horaClase.value;
+      resumen.textContent = hora ? "Hora de inicio de clase: " + hora : "";
+    });
+
+    plan.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      if (!horaClase.value) {
+        error.textContent = "Ingresa la hora de inicio de tu primera clase.";
+        horaClase.setAttribute("aria-invalid", "true");
+        horaClase.focus();
+        return;
+      }
+
+      resumen.textContent = "Hora de inicio de clase confirmada: " + horaClase.value;
+    });
+  </script>
+</body>
+</html>

@@ -34,6 +34,7 @@
 
       <button type="submit">Continuar al cálculo</button>
       <p><output id="recomendacion-salida" for="hora-clase duracion"></output></p>
+      <p><output id="llegada-estimada" for="hora-clase duracion hora-disponible"></output></p>
     </form>
   </main>
 
@@ -48,6 +49,7 @@
     const resumenDuracion = document.querySelector("#resumen-duracion");
     const resumenDisponibilidad = document.querySelector("#resumen-disponibilidad");
     const recomendacionSalida = document.querySelector("#recomendacion-salida");
+    const llegadaEstimada = document.querySelector("#llegada-estimada");
     const margenSalida = 10;
     const minutosPorDia = 24 * 60;
 
@@ -60,7 +62,14 @@
       const minutosDelDia = ((minutosTotales % minutosPorDia) + minutosPorDia) % minutosPorDia;
       const horas = Math.floor(minutosDelDia / 60);
       const minutos = minutosDelDia % 60;
-      return [horas, minutos].map(parte => String(parte).padStart(2, "0")).join(":");
+      const hora = [horas, minutos].map(parte => String(parte).padStart(2, "0")).join(":");
+      const dia = Math.floor(minutosTotales / minutosPorDia);
+
+      if (dia === -1) return `${hora} (día anterior)`;
+      if (dia < -1) return `${hora} (${-dia} días antes)`;
+      if (dia === 1) return `${hora} (día siguiente)`;
+      if (dia > 1) return `${hora} (${dia} días después)`;
+      return hora;
     }
 
     horaClase.addEventListener("input", () => {
@@ -87,6 +96,10 @@
         : "";
     });
 
+    plan.addEventListener("input", () => {
+      llegadaEstimada.textContent = "";
+    });
+
     plan.addEventListener("submit", (event) => {
       event.preventDefault();
 
@@ -107,18 +120,21 @@
       resumenHora.textContent = `Hora de inicio de clase confirmada: ${horaClase.value}`;
       resumenDuracion.textContent = `Duración habitual: ${duracion.value} minutos`;
 
-      const minutosSalida = horaEnMinutos(horaClase.value) - (duracion.valueAsNumber + margenSalida);
-      const diasAntes = -Math.floor(minutosSalida / minutosPorDia);
-      let diaDeSalida = "";
-      if (diasAntes === 1) {
-        diaDeSalida = " (día anterior)";
-      } else if (diasAntes > 1) {
-        diaDeSalida = ` (${diasAntes} días antes)`;
-      }
+      const minutosClase = horaEnMinutos(horaClase.value);
+      const minutosViaje = duracion.valueAsNumber;
+      const minutosSalida = minutosClase - minutosViaje - margenSalida;
 
       recomendacionSalida.textContent =
-        `Hora recomendada de salida: ${formatearHora(minutosSalida)}${diaDeSalida}` +
+        `Hora recomendada de salida: ${formatearHora(minutosSalida)}` +
         ` con ${margenSalida} minutos de margen.`;
+
+      const minutosLlegada = horaDisponible.value
+        ? horaEnMinutos(horaDisponible.value) + minutosViaje
+        : minutosClase - margenSalida;
+      const detalleLlegada = horaDisponible.value ? "" : " (si sales a la hora recomendada)";
+
+      llegadaEstimada.textContent =
+        `Hora estimada de llegada: ${formatearHora(minutosLlegada)}${detalleLlegada}.`;
     });
   </script>
 </body>

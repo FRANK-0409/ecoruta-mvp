@@ -26,6 +26,12 @@
       <p id="error-duracion" role="alert"></p>
       <p><output id="resumen-duracion" for="duracion"></output></p>
 
+      <p>
+        <label for="hora-disponible">Hora más temprana a la que puedo salir (opcional)</label>
+        <input id="hora-disponible" type="time">
+      </p>
+      <p><output id="resumen-disponibilidad" for="hora-disponible"></output></p>
+
       <button type="submit">Continuar al cálculo</button>
     </form>
   </main>
@@ -34,10 +40,12 @@
     const plan = document.querySelector("#plan");
     const horaClase = document.querySelector("#hora-clase");
     const duracion = document.querySelector("#duracion");
+    const horaDisponible = document.querySelector("#hora-disponible");
     const errorHora = document.querySelector("#error-hora");
     const errorDuracion = document.querySelector("#error-duracion");
     const resumenHora = document.querySelector("#resumen-hora");
     const resumenDuracion = document.querySelector("#resumen-duracion");
+    const resumenDisponibilidad = document.querySelector("#resumen-disponibilidad");
 
     horaClase.addEventListener("input", () => {
       errorHora.textContent = "";
@@ -52,6 +60,12 @@
       duracion.removeAttribute("aria-invalid");
       resumenDuracion.textContent = duracion.validity.valid
         ? `Duración habitual: ${duracion.value} minutos`
+        : "";
+    });
+
+    horaDisponible.addEventListener("input", () => {
+      resumenDisponibilidad.textContent = horaDisponible.value
+        ? `Hora más temprana de salida: ${horaDisponible.value}`
         : "";
     });
 

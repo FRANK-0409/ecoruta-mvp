@@ -35,6 +35,7 @@
       <button type="submit">Continuar al cálculo</button>
       <p><output id="recomendacion-salida" for="hora-clase duracion"></output></p>
       <p><output id="llegada-estimada" for="hora-clase duracion hora-disponible"></output></p>
+      <p><output id="margen-llegada" for="hora-clase duracion hora-disponible"></output></p>
     </form>
   </main>
 
@@ -50,6 +51,7 @@
     const resumenDisponibilidad = document.querySelector("#resumen-disponibilidad");
     const recomendacionSalida = document.querySelector("#recomendacion-salida");
     const llegadaEstimada = document.querySelector("#llegada-estimada");
+    const avisoMargen = document.querySelector("#margen-llegada");
     const margenSalida = 10;
     const minutosPorDia = 24 * 60;
 
@@ -98,6 +100,7 @@
 
     plan.addEventListener("input", () => {
       llegadaEstimada.textContent = "";
+      avisoMargen.textContent = "";
     });
 
     plan.addEventListener("submit", (event) => {
@@ -135,6 +138,20 @@
 
       llegadaEstimada.textContent =
         `Hora estimada de llegada: ${formatearHora(minutosLlegada)}${detalleLlegada}.`;
+
+      const margenLlegada = minutosClase - minutosLlegada;
+      const unidad = Math.abs(margenLlegada) === 1 ? "minuto" : "minutos";
+
+      if (margenLlegada > 0) {
+        const tipo = margenLlegada >= margenSalida ? "suficiente" : "reducido";
+        avisoMargen.textContent =
+          `Tienes un margen ${tipo} de ${margenLlegada} ${unidad} antes de clase.`;
+      } else if (margenLlegada === 0) {
+        avisoMargen.textContent = "Llegarías justo al inicio de clase, con 0 minutos de margen.";
+      } else {
+        avisoMargen.textContent =
+          `Llegarías ${-margenLlegada} ${unidad} después del inicio de clase.`;
+      }
     });
   </script>
 </body>

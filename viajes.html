@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ecfef3">
+  <title>Viajes compartidos · EcoRuta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;display=swap">
+  <link rel="stylesheet" href="viajes.css">
+</head>
+<body class="rides-page">
+  <header class="site-header">
+    <div class="wrap site-header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <div>
+          <strong>EcoRuta</strong>
+          <span class="brand-caption">Movilidad estudiantil · Tecsup</span>
+        </div>
+      </div>
+      <nav class="app-nav" aria-label="EcoRuta">
+        <a href="./" id="ir-al-planificador">Planificador</a>
+        <a href="viajes.html" aria-current="page">Viajes compartidos</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap rides-main">
+    <header class="rides-intro">
+      <div>
+        <h1>Viajes compartidos</h1>
+        <p>Encuentra estudiantes que salgan de tu distrito rumbo a Tecsup.</p>
+      </div>
+      <div class="ride-actions">
+        <button class="ride-button" id="ofrecer-viaje" type="button">Ofrecer asientos</button>
+        <button class="ride-button secondary" id="buscar-grupo" type="button">Buscar compañía</button>
+      </div>
+    </header>
+
+    <form class="ride-panel ride-filters" id="filtros" aria-label="Buscar publicaciones">
+      <label class="ride-field">Sede de Tecsup
+        <select class="ride-select" name="sede" required></select>
+      </label>
+      <label class="ride-field">Distrito de salida
+        <input name="distrito" maxlength="60" placeholder="Ej. Paucarpata">
+      </label>
+      <label class="ride-field">Fecha
+        <input type="date" name="fecha">
+      </label>
+      <label class="ride-field">Publicaciones
+        <select class="ride-select" name="tipo">
+          <option value="">Todas</option>
+          <option value="viaje">Asientos ofrecidos</option>
+          <option value="grupo">Grupos</option>
+        </select>
+      </label>
+      <button type="submit" class="ride-button secondary" id="aplicar-filtros">Buscar</button>
+    </form>
+
+    <section class="ride-results" aria-labelledby="publicaciones-titulo">
+      <div class="ride-results-header">
+        <h2 id="publicaciones-titulo">Publicaciones</h2>
+        <p class="ride-status" id="estado-viajes" role="status"></p>
+      </div>
+      <div class="ride-list" id="publicaciones" aria-busy="true"></div>
+    </section>
+
+    <noscript>Activa JavaScript para consultar y publicar viajes.</noscript>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-content">
+      <p>EcoRuta · Tecsup</p>
+      <p>Para la evaluación, usa seudónimos y puntos de encuentro ficticios.</p>
+    </div>
+  </footer>
+
+  <dialog class="ride-dialog" id="publicar-dialog" aria-labelledby="publicar-titulo">
+    <div class="ride-dialog-header">
+      <h2 id="publicar-titulo">Publicar</h2>
+      <button class="dialog-close" id="cerrar-publicar" type="button" aria-label="Cerrar formulario">×</button>
+    </div>
+    <p class="ride-dialog-context" id="publicar-contexto" hidden></p>
+    <form class="ride-form" id="form-publicar">
+      <label class="ride-field">Tu seudónimo
+        <input name="alias" maxlength="36" required autocomplete="off" placeholder="Ej. Luis">
+      </label>
+      <div class="ride-form-grid" id="datos-origen">
+        <label class="ride-field">Sede de destino
+          <select class="ride-select" name="sede" required></select>
+        </label>
+        <label class="ride-field">Distrito de salida
+          <input name="distrito" maxlength="60" required placeholder="Ej. Cayma">
+        </label>
+        <label class="ride-field">Fecha del viaje
+          <input type="date" name="fecha" required>
+        </label>
+        <label class="ride-field" id="referencia-grupo" hidden>Punto de partida (opcional)
+          <input name="punto-grupo" maxlength="120" placeholder="Ej. Paradero de la plaza">
+        </label>
+      </div>
+      <label class="ride-field"><span id="etiqueta-hora">Hora de recojo</span>
+        <input type="time" name="hora" required>
+      </label>
+      <fieldset class="ride-form-grid" id="datos-auto">
+        <legend class="sr-only">Datos del viaje en auto</legend>
+        <label class="ride-field full-width">Punto de recojo
+          <input name="punto" maxlength="120" required placeholder="Ej. Paradero de la plaza">
+        </label>
+        <label class="ride-field">Hora estimada de llegada
+          <input type="time" name="llegada" required>
+        </label>
+        <label class="ride-field">Asientos disponibles
+          <input type="number" name="cupos" min="1" max="8" step="1" inputmode="numeric" required>
+        </label>
+        <label class="ride-field full-width">Aporte por persona (S/)
+          <input type="number" name="aporte" min="0" step="0.01" inputmode="decimal" value="0" required>
+        </label>
+      </fieldset>
+      <p class="ride-error" id="publicar-error" role="alert" hidden></p>
+      <button type="submit" class="ride-button" id="publicar-enviar">Publicar</button>
+    </form>
+  </dialog>
+
+  <dialog class="ride-dialog join-dialog" id="unirse-dialog" aria-labelledby="unirse-titulo">
+    <div class="ride-dialog-header">
+      <h2 id="unirse-titulo">Unirme</h2>
+      <button class="dialog-close" id="cerrar-unirse" type="button" aria-label="Cerrar solicitud">×</button>
+    </div>
+    <p class="ride-dialog-context" id="unirse-contexto"></p>
+    <form class="ride-form" id="form-unirse">
+      <label class="ride-field">Tu seudónimo
+        <input name="alias" maxlength="36" required autocomplete="off" placeholder="Ej. Jorge">
+      </label>
+      <p class="ride-error" id="unirse-error" role="alert" hidden></p>
+      <button type="submit" class="ride-button" id="unirse-enviar">Confirmar</button>
+    </form>
+  </dialog>
+
+  <template id="tarjeta-publicacion">
+    <article class="ride-card ride-panel">
+      <div class="ride-card-head">
+        <span class="ride-badge" data-ride="tipo"></span>
+        <span class="ride-badge ride-availability" data-ride="estado"></span>
+      </div>
+      <div>
+        <h3 data-ride="distrito"></h3>
+        <p class="ride-card-campus" data-ride="sede"></p>
+      </div>
+      <p class="ride-card-date" data-ride="fecha"></p>
+      <dl class="ride-facts">
+        <div><dt data-ride="etiqueta-hora"></dt><dd data-ride="hora"></dd></div>
+        <div data-ride="aporte" hidden><dt>Aporte por persona</dt><dd data-ride="dato"></dd></div>
+      </dl>
+      <p class="ride-card-point" data-ride="punto" hidden></p>
+      <p class="ride-card-author" data-ride="autor"></p>
+      <div class="ride-card-actions" data-ride="acciones"></div>
+      <div class="ride-requests" data-ride="solicitudes" hidden></div>
+    </article>
+  </template>
+  <script src="sedes.js" defer></script>
+  <script src="viajes.js" defer></script>
+</body>
+</html>

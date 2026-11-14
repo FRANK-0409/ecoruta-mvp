@@ -1,62 +1,803 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-PE">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ecfef3">
+  <meta name="description" content="Planifica tu salida al campus de Tecsup y consulta cuánto margen tendrás antes de clase.">
   <title>EcoRuta · Planificador de salida</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;display=swap">
+  <link rel="stylesheet" href="viajes.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #ecfef3;
+      --surface: #fff;
+      --mint: #e4f6ec;
+      --mint-strong: #d9eee2;
+      --forest: #073b29;
+      --forest-light: #185338;
+      --teal: #006a61;
+      --text: #172b23;
+      --muted: #425b50;
+      --line: #cbded3;
+      --field-line: #8aafa0;
+      --error: #a32926;
+      --radius: 1.15rem;
+      --shadow: 0 2px 4px #073b2908, 0 14px 36px #073b2909;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--canvas);
+      line-height: 1.5;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
+
+    h1, h2, h3, p, dl, dd { margin: 0; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+
+    .wrap {
+      width: calc(100% - 4rem);
+      max-width: 76rem;
+      margin-inline: auto;
+    }
+
+    .site-header {
+      border-bottom: 1px solid var(--line);
+      background: #f4fdf7;
+    }
+
+    .brand {
+      min-height: 4.5rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      color: var(--forest);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 1.18rem;
+      font-weight: 750;
+      line-height: 1.2;
+      letter-spacing: -.035em;
+    }
+
+    .brand-caption {
+      display: block;
+      margin-top: .125rem;
+      color: var(--muted);
+      font-size: .77rem;
+    }
+
+    .brand-mark, .title-icon {
+      display: grid;
+      flex: none;
+      place-items: center;
+      border-radius: .7rem;
+    }
+
+    .brand-mark {
+      width: 2.55rem;
+      height: 2.55rem;
+      background: var(--forest);
+      color: #c2eed2;
+    }
+
+    .brand-mark > span {
+      position: relative;
+      width: 1.15rem;
+      height: 1.15rem;
+      border: 2px solid currentColor;
+      border-radius: 70% 15% 70% 45%;
+      transform: rotate(-12deg);
+    }
+
+    .brand-mark > span::after {
+      content: "";
+      position: absolute;
+      inset: auto auto .05rem -.14rem;
+      width: .7rem;
+      height: 2px;
+      border-radius: 2px;
+      background: currentColor;
+      transform: rotate(-38deg);
+    }
+
+    .main {
+      flex: 1;
+      padding-block: clamp(2rem, 4.3vw, 3.75rem) clamp(2rem, 4vw, 3.5rem);
+    }
+
+    .intro { margin-bottom: clamp(1.4rem, 2.8vw, 2.15rem); }
+
+    h1 {
+      max-width: 23ch;
+      color: var(--forest);
+      font-size: clamp(2rem, 4.1vw, 3.25rem);
+      font-weight: 750;
+      letter-spacing: -.05em;
+      line-height: 1.07;
+      text-wrap: balance;
+    }
+
+    .intro > p {
+      max-width: 42rem;
+      margin-top: .7rem;
+      color: var(--muted);
+      font-size: clamp(.96rem, 1.6vw, 1.1rem);
+    }
+
+    .planner {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 1.5rem;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: clamp(1.15rem, 2.5vw, 1.8rem);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      color: var(--forest);
+      font-size: clamp(1.13rem, 1.9vw, 1.4rem);
+      font-weight: 700;
+      letter-spacing: -.027em;
+      line-height: 1.25;
+    }
+
+    .form-panel h2 {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .title-icon {
+      width: 2.25rem;
+      height: 2.25rem;
+      background: var(--mint);
+      color: var(--forest-light);
+    }
+
+    .clock-icon {
+      position: relative;
+      display: block;
+      width: 1.15rem;
+      height: 1.15rem;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+    }
+
+    .clock-icon::after {
+      content: "";
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      width: 27%;
+      height: 35%;
+      border-left: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      border-radius: 0 0 0 2px;
+    }
+
+    form { display: grid; gap: 1.1rem; }
+    .field { display: grid; gap: .4rem; min-width: 0; }
+
+    label {
+      color: var(--text);
+      font-size: .9rem;
+      font-weight: 650;
+      line-height: 1.35;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+    }
+
+    .optional {
+      flex: none;
+      padding: .1rem .5rem;
+      border-radius: 2rem;
+      color: var(--forest-light);
+      background: var(--mint-strong);
+      font-size: .7rem;
+      font-weight: 650;
+    }
+
+    .field input {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      min-height: 3.15rem;
+      padding: .65rem .85rem;
+      border: 1px solid var(--field-line);
+      border-radius: .6rem;
+      background: var(--mint);
+      color: var(--text);
+      font-size: 1.08rem;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .field input::placeholder { color: #536f61; opacity: 1; }
+    .field input:focus { background: #f6fffa; }
+
+    .field input[aria-invalid="true"] {
+      border-color: var(--error);
+      background: #fff4f3;
+    }
+
+    .number-field { position: relative; }
+    .number-field input { appearance: textfield; padding-inline-end: 3.65rem; }
+    .number-field input::-webkit-inner-spin-button,
+    .number-field input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+
+    .unit {
+      position: absolute;
+      inset-inline-end: .55rem;
+      top: 50%;
+      padding: .17rem .55rem;
+      border-radius: .3rem;
+      background: var(--mint-strong);
+      color: var(--forest-light);
+      font-size: .78rem;
+      font-weight: 700;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .field-help, .field-error, .save-status {
+      font-size: .79rem;
+      line-height: 1.45;
+    }
+
+    .field-help { color: var(--muted); }
+    .field-error { color: var(--error); font-weight: 600; }
+    .field-error:empty, .save-status:empty, .day-note:empty { display: none; }
+
+    .route-link {
+      display: inline-flex;
+      align-items: center;
+      justify-self: start;
+      gap: .4rem;
+      min-height: 2.75rem;
+      color: var(--forest-light);
+      font-size: .86rem;
+      font-weight: 650;
+      text-underline-offset: .18em;
+    }
+
+    .route-link:hover { color: var(--teal); }
+
+    .form-actions {
+      display: grid;
+      justify-items: stretch;
+      gap: .35rem;
+      margin-top: .25rem;
+    }
+
+    .calculate {
+      position: relative;
+      min-height: 3.25rem;
+      padding: .75rem 2.75rem;
+      border: 0;
+      border-radius: .65rem;
+      background: var(--forest);
+      box-shadow: 0 3px 7px #073b292b;
+      color: #fff;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .calculate:hover { background: var(--forest-light); }
+    .calculate:active { box-shadow: none; }
+
+    .button-arrow {
+      position: absolute;
+      top: 50%;
+      inset-inline-end: 1rem;
+      transform: translateY(-50%);
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+
+    .clear {
+      justify-self: center;
+      min-height: 2.75rem;
+      padding-inline: 1rem;
+      border: 0;
+      border-radius: .45rem;
+      background: transparent;
+      color: var(--forest-light);
+      font-size: .86rem;
+      font-weight: 650;
+    }
+
+    .clear:hover { background: var(--mint); }
+
+    .save-status {
+      justify-self: center;
+      margin-top: -.6rem;
+      color: var(--teal);
+      font-weight: 650;
+      text-align: center;
+    }
+
+    .save-status[data-tipo="error"] { color: var(--error); }
+
+    .results-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+
+    .results-panel h2 { scroll-margin-block-start: 1rem; }
+
+    .empty-state {
+      position: relative;
+      isolation: isolate;
+      flex: 1;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      min-height: 18rem;
+      overflow: hidden;
+      padding: 2rem 1.25rem;
+      border: 1px solid #deeee4;
+      border-radius: .9rem;
+      background: #f6fcf8;
+      text-align: center;
+    }
+
+    .empty-state::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: auto -5.5rem -8.3rem auto;
+      width: 19rem;
+      height: 19rem;
+      border: 2.5rem solid #eaf6ee;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .clock-orbit {
+      display: grid;
+      place-items: center;
+      width: 5.3rem;
+      height: 5.3rem;
+      margin-bottom: 1.35rem;
+      border: .65rem solid var(--mint);
+      border-radius: 50%;
+      color: var(--forest-light);
+      background: #f0fbf4;
+    }
+
+    .clock-orbit .clock-icon { width: 2.1rem; height: 2.1rem; border-width: 2.5px; }
+
+    .empty-state h3 {
+      max-width: 26ch;
+      color: var(--forest);
+      font-size: clamp(1.1rem, 2vw, 1.36rem);
+      letter-spacing: -.025em;
+      line-height: 1.3;
+      text-wrap: balance;
+    }
+
+    .empty-state > p {
+      max-width: 33ch;
+      margin-top: .55rem;
+      color: var(--muted);
+      font-size: .9rem;
+      text-wrap: pretty;
+    }
+
+    .result-content { display: grid; gap: 1rem; }
+
+    .departure {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .75rem;
+      padding: clamp(1rem, 2.4vw, 1.45rem);
+      border-radius: .9rem;
+      background: var(--mint);
+      color: var(--forest);
+    }
+
+    .departure h3, .trip h3 {
+      font-size: .78rem;
+      font-weight: 750;
+      letter-spacing: .055em;
+      text-transform: uppercase;
+    }
+
+    .departure h3 { color: var(--teal); }
+
+    .departure-time, .arrival-time, .trip dd {
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -.05em;
+      line-height: 1.05;
+    }
+
+    .departure-time { margin-top: .28rem; font-size: clamp(2.65rem, 6vw, 4rem); }
+    .arrival-time { font-size: clamp(1.75rem, 4vw, 2.55rem); color: var(--forest); }
+
+    .buffer {
+      flex: none;
+      display: grid;
+      place-content: center;
+      width: 5.1rem;
+      aspect-ratio: 1;
+      border: .28rem solid var(--teal);
+      border-left-color: #badbd0;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .buffer strong { font-size: .99rem; font-variant-numeric: tabular-nums; }
+    .buffer span { margin-top: .15rem; color: var(--muted); font-size: .62rem; }
+
+    .day-note {
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 600;
+      margin-top: .25rem;
+    }
+
+    .arrival {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      padding: .9rem 1.1rem;
+      border: 1px solid #e0ede6;
+      border-radius: .75rem;
+      background: #f6fbf8;
+    }
+
+    .arrival h3 { color: var(--forest); font-size: .95rem; font-weight: 700; }
+    .arrival #supuesto-llegada { margin-top: .12rem; color: var(--muted); font-size: .78rem; }
+    .arrival-value { text-align: end; flex: 0 1 auto; min-width: 0; }
+    .arrival-value .day-note { max-width: 14ch; }
+
+    .notice {
+      --notice-surface: #fff6dc;
+      --notice-border: #efd297;
+      --notice-text: #753e0b;
+      --notice-icon: #f9e6b3;
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      padding: .9rem 1rem;
+      border: 1px solid var(--notice-border);
+      border-radius: .75rem;
+      background: var(--notice-surface);
+      color: var(--notice-text);
+    }
+
+    .notice[data-estado="suficiente"] {
+      --notice-surface: #eefbf3;
+      --notice-border: #b9e2ca;
+      --notice-text: #155638;
+      --notice-icon: #d8f2e3;
+    }
+
+    .notice[data-estado="inicio"] {
+      --notice-surface: #edf6fc;
+      --notice-border: #c2daee;
+      --notice-text: #244c72;
+      --notice-icon: #dbeaf7;
+    }
+
+    .notice[data-estado="tarde"] {
+      --notice-surface: #fff0ef;
+      --notice-border: #f2c4c1;
+      --notice-text: #862622;
+      --notice-icon: #f9d9d5;
+    }
+
+    .notice-icon {
+      display: grid;
+      flex: none;
+      place-items: center;
+      width: 1.85rem;
+      height: 1.85rem;
+      border-radius: .45rem;
+      background: var(--notice-icon);
+      font-size: .95rem;
+      font-weight: 750;
+      line-height: 1;
+    }
+
+    .notice h3 { font-size: .94rem; font-weight: 750; }
+    .notice p { margin-top: .15rem; font-size: .81rem; line-height: 1.42; }
+
+    .trip h3 { color: var(--muted); margin-bottom: .45rem; }
+
+    .trip dl {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .45rem;
+    }
+
+    .trip dl > div {
+      min-width: 0;
+      display: grid;
+      gap: .3rem;
+      align-content: start;
+      padding: .65rem .7rem;
+      border-radius: .56rem;
+      background: var(--mint);
+      color: var(--forest);
+    }
+
+    .trip dl > div:last-child { background: var(--forest); color: #fff; }
+    .trip dt { font-size: .72rem; line-height: 1.3; }
+
+    .trip dd {
+      font-size: clamp(.94rem, 2vw, 1.18rem);
+      letter-spacing: -.03em;
+      line-height: 1.22;
+      overflow-wrap: anywhere;
+    }
+
+    .site-footer {
+      background: var(--mint);
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .footer-content {
+      min-height: 3.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: .35rem 1.5rem;
+      padding-block: .9rem;
+    }
+
+    .footer-content > :first-child { color: var(--forest); font-weight: 650; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    @media (max-width: 49rem) {
+      .wrap { width: calc(100% - 2rem); max-width: 35rem; }
+      .brand { min-height: 4rem; }
+      .planner { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+      .empty-state { min-height: 14rem; }
+      .intro > p { max-width: 35ch; }
+    }
+
+    @media (max-width: 24rem) {
+      .wrap { width: calc(100% - 1.5rem); }
+      .panel { padding: .95rem; }
+      .label-row { align-items: start; }
+      .buffer { width: 4.1rem; }
+      .buffer strong { font-size: .85rem; }
+      .trip dl > div { padding: .55rem .45rem; }
+      .arrival { padding-inline: .75rem; }
+    }
+  </style>
 </head>
 <body>
-  <main>
-    <h1>EcoRuta</h1>
-    <p>Planificador de salida al campus</p>
+  <header class="site-header">
+    <div class="wrap site-header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <div>
+          <strong>EcoRuta</strong>
+          <span class="brand-caption">Movilidad estudiantil · Tecsup</span>
+        </div>
+      </div>
+      <nav class="app-nav" aria-label="EcoRuta">
+        <a href="./" aria-current="page">Planificador</a>
+        <a href="viajes.html" id="ir-a-viajes">Viajes compartidos</a>
+      </nav>
+    </div>
+  </header>
 
-    <form id="plan" novalidate>
-      <p>
-        <label for="hora-clase">Hora de inicio de mi primera clase</label>
-        <input id="hora-clase" type="time" required aria-describedby="error-hora">
-      </p>
-      <p id="error-hora" role="alert"></p>
-      <p><output id="resumen-hora" for="hora-clase"></output></p>
+  <main class="wrap main">
+    <div class="intro">
+      <h1>Planifica tu salida al campus</h1>
+      <p>Calcula cuándo salir y cuánto tiempo tendrás antes de tu primera clase.</p>
+    </div>
 
-      <p>
-        <label for="duracion">Duración habitual del viaje (minutos)</label>
-        <input id="duracion" type="number" min="1" step="1" required
-               aria-describedby="error-duracion">
-      </p>
-      <p id="error-duracion" role="alert"></p>
-      <p><output id="resumen-duracion" for="duracion"></output></p>
+    <div class="planner">
+      <section class="panel form-panel" aria-labelledby="titulo-formulario">
+        <h2 id="titulo-formulario">
+          <span class="title-icon" aria-hidden="true"><span class="clock-icon"></span></span>
+          Parámetros del viaje
+        </h2>
 
-      <p>
-        <label for="hora-disponible">Hora más temprana a la que puedo salir (opcional)</label>
-        <input id="hora-disponible" type="time">
-      </p>
-      <p><output id="resumen-disponibilidad" for="hora-disponible"></output></p>
+        <form id="plan" novalidate>
+          <div class="field">
+            <label for="campus-plan">Sede de Tecsup</label>
+            <select id="campus-plan" class="ride-select">
+              <option value="lima">Lima · Santa Anita</option>
+              <option value="arequipa">Arequipa</option>
+              <option value="trujillo">Trujillo</option>
+            </select>
+          </div>
 
-      <button type="submit">Continuar al cálculo</button>
-      <p><output id="recomendacion-salida" for="hora-clase duracion"></output></p>
-      <p><output id="llegada-estimada" for="hora-clase duracion hora-disponible"></output></p>
-      <p><output id="margen-llegada" for="hora-clase duracion hora-disponible"></output></p>
-      <p id="estado-guardado" role="status"></p>
-    </form>
+          <div class="field">
+            <label for="hora-clase">Hora de inicio de mi primera clase</label>
+            <input id="hora-clase" type="time" required aria-describedby="error-hora">
+            <p class="field-error" id="error-hora" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="duracion">Duración habitual del viaje</label>
+            <div class="number-field">
+              <input id="duracion" type="number" min="1" step="1" inputmode="numeric"
+                     required placeholder="Ej. 40" aria-describedby="unidad-duracion error-duracion">
+              <span class="unit" id="unidad-duracion" aria-label="minutos">min</span>
+            </div>
+            <p class="field-error" id="error-duracion" role="alert"></p>
+            <a class="route-link" id="ruta-plan"
+               href="https://www.google.com/maps/dir/?api=1&amp;destination=Tecsup%2C+Av.+Cascanueces+2221%2C+Santa+Anita%2C+Lima"
+               target="_blank" rel="noopener noreferrer" aria-describedby="ayuda-ruta">
+              Ver ruta a Tecsup en Google Maps <span aria-hidden="true">↗</span>
+            </a>
+            <p class="field-help" id="ayuda-ruta">Se abre en otra pestaña. Elige tu punto de partida y escribe aquí los minutos que indique Maps.</p>
+          </div>
+
+          <div class="field">
+            <div class="label-row">
+              <label for="hora-disponible">Hora más temprana a la que puedo salir</label>
+              <span class="optional">Opcional</span>
+            </div>
+            <input id="hora-disponible" type="time" aria-describedby="ayuda-disponibilidad error-disponibilidad">
+            <p class="field-error" id="error-disponibilidad" role="alert"></p>
+            <p class="field-help" id="ayuda-disponibilidad">Si lo dejas vacío, la llegada se estima usando la hora de salida recomendada.</p>
+          </div>
+
+          <div class="form-actions">
+            <button class="calculate" type="submit">
+              <span>Calcular mi traslado</span>
+              <span class="button-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="clear" id="borrar-plan" type="button">Borrar plan</button>
+          </div>
+          <p class="save-status" id="estado-guardado"></p>
+        </form>
+      </section>
+
+      <section class="panel results-panel" aria-labelledby="titulo-resultados">
+        <h2 id="titulo-resultados" tabindex="-1">Tu plan de traslado</h2>
+
+        <div class="empty-state" id="estado-inicial">
+          <div class="clock-orbit" aria-hidden="true"><span class="clock-icon"></span></div>
+          <h3 id="titulo-estado-inicial">Completa los datos de tu traslado para ver tu plan</h3>
+          <p id="detalle-estado-inicial">Aquí verás tu salida recomendada, tu llegada estimada y el margen antes de clase.</p>
+        </div>
+
+        <div class="result-content" id="plan-calculado" hidden>
+          <div class="departure">
+            <div>
+              <h3>Hora recomendada de salida</h3>
+              <p class="departure-time" id="recomendacion-salida"></p>
+              <p class="day-note" id="dia-salida"></p>
+            </div>
+            <div class="buffer" aria-label="10 minutos de margen para imprevistos">
+              <strong>10 min</strong>
+              <span>de margen</span>
+            </div>
+          </div>
+
+          <div class="arrival">
+            <div>
+              <h3>Llegada estimada al campus</h3>
+              <p id="supuesto-llegada"></p>
+            </div>
+            <div class="arrival-value">
+              <p class="arrival-time" id="llegada-estimada"></p>
+              <p class="day-note" id="dia-llegada"></p>
+            </div>
+          </div>
+
+          <div class="notice" id="aviso">
+            <span class="notice-icon" id="icono-aviso" aria-hidden="true"></span>
+            <div>
+              <h3 id="margen-llegada"></h3>
+              <p id="detalle-margen"></p>
+            </div>
+          </div>
+
+          <div class="trip">
+            <h3>Resumen del traslado</h3>
+            <dl>
+              <div><dt>Salida prevista</dt><dd id="salida-prevista"></dd></div>
+              <div><dt>Duración</dt><dd id="duracion-prevista"></dd></div>
+              <div><dt>Inicio de clase</dt><dd id="inicio-previsto"></dd></div>
+            </dl>
+          </div>
+        </div>
+        <p class="sr-only" id="anuncio" role="status"></p>
+      </section>
+    </div>
   </main>
 
+  <footer class="site-footer">
+    <div class="wrap footer-content">
+      <p>EcoRuta · Tecsup</p>
+      <p>El último plan se guarda en este navegador.</p>
+    </div>
+  </footer>
+
+  <script src="sedes.js"></script>
   <script>
     const plan = document.querySelector("#plan");
     const horaClase = document.querySelector("#hora-clase");
     const duracion = document.querySelector("#duracion");
     const horaDisponible = document.querySelector("#hora-disponible");
-    const errorHora = document.querySelector("#error-hora");
-    const errorDuracion = document.querySelector("#error-duracion");
-    const resumenHora = document.querySelector("#resumen-hora");
-    const resumenDuracion = document.querySelector("#resumen-duracion");
-    const resumenDisponibilidad = document.querySelector("#resumen-disponibilidad");
-    const recomendacionSalida = document.querySelector("#recomendacion-salida");
-    const llegadaEstimada = document.querySelector("#llegada-estimada");
-    const avisoMargen = document.querySelector("#margen-llegada");
+    const sedePlan = document.querySelector("#campus-plan");
+    const rutaPlan = document.querySelector("#ruta-plan");
+    const estadoInicial = document.querySelector("#estado-inicial");
+    const tituloEstadoInicial = document.querySelector("#titulo-estado-inicial");
+    const detalleEstadoInicial = document.querySelector("#detalle-estado-inicial");
+    const resultado = document.querySelector("#plan-calculado");
+    const aviso = document.querySelector("#aviso");
     const estadoGuardado = document.querySelector("#estado-guardado");
+    const anuncio = document.querySelector("#anuncio");
     const clavePlan = "ecoruta:ultimo-plan";
     const margenSalida = 10;
     const minutosPorDia = 24 * 60;
+
+    const campos = [
+      {
+        input: horaClase,
+        error: document.querySelector("#error-hora"),
+        mensaje: "Ingresa la hora de inicio de tu primera clase.",
+        valido: () => horaClase.validity.valid,
+      },
+      {
+        input: duracion,
+        error: document.querySelector("#error-duracion"),
+        mensaje: "Ingresa una duración mayor que cero en minutos enteros.",
+        valido: () => duracion.validity.valid &&
+          Number.isSafeInteger(duracion.valueAsNumber + minutosPorDia),
+      },
+      {
+        input: horaDisponible,
+        error: document.querySelector("#error-disponibilidad"),
+        mensaje: "Completa la hora de salida o deja el campo vacío.",
+        valido: () => horaDisponible.validity.valid,
+      },
+    ];
 
     function horaEnMinutos(hora) {
       const [horas, minutos] = hora.split(":").map(Number);
@@ -67,112 +808,116 @@
       const minutosDelDia = ((minutosTotales % minutosPorDia) + minutosPorDia) % minutosPorDia;
       const horas = Math.floor(minutosDelDia / 60);
       const minutos = minutosDelDia % 60;
-      const hora = [horas, minutos].map(parte => String(parte).padStart(2, "0")).join(":");
+      return [horas, minutos].map(parte => String(parte).padStart(2, "0")).join(":");
+    }
+
+    function notaDia(minutosTotales) {
       const dia = Math.floor(minutosTotales / minutosPorDia);
 
-      if (dia === -1) return `${hora} (día anterior)`;
-      if (dia < -1) return `${hora} (${-dia} días antes)`;
-      if (dia === 1) return `${hora} (día siguiente)`;
-      if (dia > 1) return `${hora} (${dia} días después)`;
-      return hora;
+      if (dia === -1) return "Día anterior";
+      if (dia < -1) return `${-dia} días antes`;
+      if (dia === 1) return "Día siguiente";
+      if (dia > 1) return `${dia} días después`;
+      return "";
     }
 
-    horaClase.addEventListener("input", () => {
-      errorHora.textContent = "";
-      recomendacionSalida.textContent = "";
-      horaClase.removeAttribute("aria-invalid");
-      resumenHora.textContent = horaClase.value
-        ? `Hora de inicio de clase: ${horaClase.value}`
-        : "";
-    });
+    function mensajeMargen(margen) {
+      const minutos = Math.abs(margen);
+      const cantidad = `${minutos} ${minutos === 1 ? "minuto" : "minutos"}`;
 
-    duracion.addEventListener("input", () => {
-      errorDuracion.textContent = "";
-      recomendacionSalida.textContent = "";
-      duracion.removeAttribute("aria-invalid");
-      resumenDuracion.textContent = duracion.validity.valid
-        ? `Duración habitual: ${duracion.value} minutos`
-        : "";
-    });
+      if (margen >= margenSalida) {
+        return {
+          estado: "suficiente",
+          icono: "✓",
+          titulo: `Margen suficiente de ${cantidad}`,
+          detalle: "Tu llegada estimada deja tiempo para imprevistos.",
+        };
+      }
 
-    function mostrarDisponibilidad() {
-      resumenDisponibilidad.textContent = horaDisponible.value
-        ? `Hora más temprana de salida: ${horaDisponible.value}`
-        : "";
+      if (margen > 0) {
+        return {
+          estado: "reducido",
+          icono: "!",
+          titulo: `Margen reducido de ${cantidad}`,
+          detalle: "Tienes menos de 10 minutos para imprevistos antes de clase.",
+        };
+      }
+
+      if (margen === 0) {
+        return {
+          estado: "inicio",
+          icono: "◷",
+          titulo: "Llegada justo al inicio",
+          detalle: "Tienes 0 minutos de margen. Cualquier demora te haría llegar tarde.",
+        };
+      }
+
+      return {
+        estado: "tarde",
+        icono: "!",
+        titulo: `Llegarías ${cantidad} después del inicio de clase`,
+        detalle: "Si puedes adelantar tu salida, ajusta la hora y vuelve a calcular.",
+      };
     }
-    horaDisponible.addEventListener("input", mostrarDisponibilidad);
-
-    plan.addEventListener("input", () => {
-      llegadaEstimada.textContent = "";
-      avisoMargen.textContent = "";
-      estadoGuardado.textContent = "";
-    });
-
-    plan.addEventListener("submit", (event) => {
-      event.preventDefault();
-
-      if (!horaClase.value) {
-        errorHora.textContent = "Ingresa la hora de inicio de tu primera clase.";
-        horaClase.setAttribute("aria-invalid", "true");
-        horaClase.focus();
-        return;
-      }
-
-      if (!duracion.validity.valid) {
-        errorDuracion.textContent = "Ingresa una duración mayor que cero en minutos enteros.";
-        duracion.setAttribute("aria-invalid", "true");
-        duracion.focus();
-        return;
-      }
-
-      mostrarPlan();
-
-      try {
-        localStorage.setItem(clavePlan, JSON.stringify({
-          horaClase: horaClase.value,
-          duracion: duracion.value,
-          horaDisponible: horaDisponible.value,
-        }));
-        estadoGuardado.textContent = "Plan guardado en este navegador.";
-      } catch {
-        estadoGuardado.textContent = "El navegador no pudo guardar el plan.";
-      }
-    });
 
     function mostrarPlan() {
-      mostrarDisponibilidad();
-      resumenHora.textContent = `Hora de inicio de clase confirmada: ${horaClase.value}`;
-      resumenDuracion.textContent = `Duración habitual: ${duracion.value} minutos`;
-
       const minutosClase = horaEnMinutos(horaClase.value);
       const minutosViaje = duracion.valueAsNumber;
       const minutosSalida = minutosClase - minutosViaje - margenSalida;
+      const salidaPrevista = horaDisponible.value ? horaEnMinutos(horaDisponible.value) : minutosSalida;
+      const minutosLlegada = salidaPrevista + minutosViaje;
+      const fechaSalidaPrevista = notaDia(salidaPrevista);
+      const recomendacion = formatearHora(minutosSalida);
+      const llegada = formatearHora(minutosLlegada);
+      const margen = mensajeMargen(minutosClase - minutosLlegada);
 
-      recomendacionSalida.textContent =
-        `Hora recomendada de salida: ${formatearHora(minutosSalida)}` +
-        ` con ${margenSalida} minutos de margen.`;
+      document.querySelector("#recomendacion-salida").textContent = recomendacion;
+      document.querySelector("#dia-salida").textContent = notaDia(minutosSalida);
+      document.querySelector("#llegada-estimada").textContent = llegada;
+      document.querySelector("#dia-llegada").textContent = notaDia(minutosLlegada);
+      document.querySelector("#supuesto-llegada").textContent = horaDisponible.value
+        ? `Si sales a las ${formatearHora(salidaPrevista)}`
+        : "Si sales a la hora recomendada";
 
-      const minutosLlegada = horaDisponible.value
-        ? horaEnMinutos(horaDisponible.value) + minutosViaje
-        : minutosClase - margenSalida;
-      const detalleLlegada = horaDisponible.value ? "" : " (si sales a la hora recomendada)";
+      aviso.dataset.estado = margen.estado;
+      document.querySelector("#icono-aviso").textContent = margen.icono;
+      document.querySelector("#margen-llegada").textContent = margen.titulo;
+      document.querySelector("#detalle-margen").textContent = margen.detalle;
+      document.querySelector("#salida-prevista").textContent =
+        formatearHora(salidaPrevista) + (fechaSalidaPrevista ? ` (${fechaSalidaPrevista.toLowerCase()})` : "");
+      document.querySelector("#duracion-prevista").textContent = `${minutosViaje} min`;
+      document.querySelector("#inicio-previsto").textContent = horaClase.value;
 
-      llegadaEstimada.textContent =
-        `Hora estimada de llegada: ${formatearHora(minutosLlegada)}${detalleLlegada}.`;
+      estadoInicial.hidden = true;
+      resultado.hidden = false;
+      return [
+        `Salida recomendada: ${recomendacion}`,
+        notaDia(minutosSalida).toLowerCase(),
+        `llegada estimada: ${llegada}`,
+        notaDia(minutosLlegada).toLowerCase(),
+        margen.titulo,
+      ].filter(Boolean).join(". ") + ".";
+    }
 
-      const margenLlegada = minutosClase - minutosLlegada;
-      const unidad = Math.abs(margenLlegada) === 1 ? "minuto" : "minutos";
-
-      if (margenLlegada > 0) {
-        const tipo = margenLlegada >= margenSalida ? "suficiente" : "reducido";
-        avisoMargen.textContent =
-          `Tienes un margen ${tipo} de ${margenLlegada} ${unidad} antes de clase.`;
-      } else if (margenLlegada === 0) {
-        avisoMargen.textContent = "Llegarías justo al inicio de clase, con 0 minutos de margen.";
+    function mostrarEstadoInicial() {
+      if (campos.some(({input}) => input.hasAttribute("aria-invalid"))) {
+        tituloEstadoInicial.textContent = "Corrige los datos del formulario";
+        detalleEstadoInicial.textContent = "Revisa los campos señalados para calcular tu traslado.";
+      } else if (campos.every(({valido}) => valido())) {
+        tituloEstadoInicial.textContent = "Calcula tu traslado";
+        detalleEstadoInicial.textContent = "Pulsa «Calcular mi traslado» para ver tu plan.";
       } else {
-        avisoMargen.textContent =
-          `Llegarías ${-margenLlegada} ${unidad} después del inicio de clase.`;
+        tituloEstadoInicial.textContent = "Completa los datos de tu traslado para ver tu plan";
+        detalleEstadoInicial.textContent = "Aquí verás tu salida recomendada, tu llegada estimada y el margen antes de clase.";
       }
+
+      resultado.hidden = true;
+      estadoInicial.hidden = false;
+    }
+
+    function mostrarGuardado(mensaje, tipo = "") {
+      estadoGuardado.textContent = mensaje;
+      estadoGuardado.dataset.tipo = tipo;
     }
 
     function recuperarPlan() {
@@ -183,22 +928,108 @@
         return;
       }
 
-      if (!guardado) return;
+      if (typeof guardado?.horaClase !== "string" || typeof guardado.duracion !== "string") return;
 
-      horaClase.value = guardado.horaClase ?? "";
-      duracion.value = guardado.duracion ?? "";
-      horaDisponible.value = guardado.horaDisponible ?? "";
+      horaClase.value = guardado.horaClase;
+      duracion.value = guardado.duracion;
+      horaDisponible.value = typeof guardado.horaDisponible === "string" ? guardado.horaDisponible : "";
+      if (Object.hasOwn(sedesTecsup, guardado.sede)) sedePlan.value = guardado.sede;
 
-      if (!horaClase.value || !duracion.validity.valid) {
+      if (!campos.every(({valido}) => valido())) {
         plan.reset();
         return;
       }
 
       mostrarPlan();
-      estadoGuardado.textContent = "Último plan recuperado.";
+      mostrarGuardado("Último plan recuperado.");
     }
 
+    function actualizarRuta() {
+      rutaPlan.href = enlaceMaps(sedePlan.value);
+      document.querySelector("#ir-a-viajes").href = "viajes.html?sede=" + sedePlan.value;
+    }
+
+    const sedeSolicitada = new URLSearchParams(location.search).get("sede");
+    sedePlan.addEventListener("change", actualizarRuta);
+
+    plan.addEventListener("input", (event) => {
+      const campo = campos.find(({input}) => input === event.target);
+      if (!campo) return;
+
+      campo.input.removeAttribute("aria-invalid");
+      campo.error.textContent = "";
+      mostrarGuardado("");
+      anuncio.textContent = "";
+      mostrarEstadoInicial();
+    });
+
+    plan.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      let primerInvalido;
+      for (const {input, error, mensaje, valido} of campos) {
+        if (valido()) {
+          input.removeAttribute("aria-invalid");
+          error.textContent = "";
+        } else {
+          input.setAttribute("aria-invalid", "true");
+          error.textContent = mensaje;
+          primerInvalido ??= input;
+        }
+      }
+
+      if (primerInvalido) {
+        mostrarEstadoInicial();
+        primerInvalido.focus();
+        return;
+      }
+
+      const resumen = mostrarPlan();
+      try {
+        localStorage.setItem(clavePlan, JSON.stringify({
+          horaClase: horaClase.value,
+          duracion: duracion.value,
+          horaDisponible: horaDisponible.value,
+          sede: sedePlan.value,
+        }));
+        mostrarGuardado("Plan guardado en este navegador.");
+      } catch {
+        mostrarGuardado("El navegador no pudo guardar el plan.", "error");
+      }
+
+      anuncio.textContent = `${resumen} ${estadoGuardado.textContent}`;
+      if (matchMedia("(max-width: 49rem)").matches) {
+        document.querySelector("#titulo-resultados").focus();
+      }
+    });
+
+    document.querySelector("#borrar-plan").addEventListener("click", () => {
+      plan.reset();
+      actualizarRuta();
+      for (const {input, error} of campos) {
+        input.removeAttribute("aria-invalid");
+        error.textContent = "";
+      }
+
+      mostrarEstadoInicial();
+      try {
+        localStorage.removeItem(clavePlan);
+        mostrarGuardado("Plan borrado de este navegador.");
+      } catch {
+        mostrarGuardado("El navegador no pudo borrar el plan guardado.", "error");
+      }
+
+      anuncio.textContent = estadoGuardado.textContent;
+      horaClase.focus();
+    });
+
     recuperarPlan();
+    if (Object.hasOwn(sedesTecsup, sedeSolicitada) && sedePlan.value !== sedeSolicitada) {
+      sedePlan.value = sedeSolicitada;
+      mostrarGuardado("");
+      mostrarEstadoInicial();
+    }
+    actualizarRuta();
   </script>
 </body>
 </html>
